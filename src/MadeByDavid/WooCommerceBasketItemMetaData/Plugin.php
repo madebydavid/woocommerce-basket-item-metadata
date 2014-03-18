@@ -23,6 +23,8 @@ class Plugin {
         add_filter('woocommerce_get_item_data',array($this, 'getOrderItemMeta'), 10, 2);
         add_action('woocommerce_add_order_item_meta', array($this, 'addOrderItemMeta'), 10, 2);
         
+        add_filter('mbd_br_extra_fields', array($this, 'addExtraFieldValues'), 10, 2);
+        add_filter('mbd_br_booking_notes', array($this, 'getOrderItemNotes'), 10, 3);
         
         if (is_admin()) {
             $this->admin = new PluginAdmin($this);
@@ -133,6 +135,23 @@ class Plugin {
     public function getConfiguration() {
         return $this->configuration;
     }
+    
+    public function addExtraFieldValues($linkArgs, $item) {
+        /* passing the metadata too */
+        $metaDataName = \MadeByDavid\WooCommerceBasketItemMetaData\Plugin::getMetaDataName();
+        if (array_key_exists($metaDataName, $item)) {
+            $linkArgs[\MadeByDavid\WooCommerceBasketItemMetaData\Plugin::getFieldName()] =urlencode($item[$metaDataName]);
+        }
+        
+        return $linkArgs;
+    }
+    
+    public function getOrderItemNotes($notes, $order, $orderItemId) {
+        if (0 == strlen($metaDataName = \MadeByDavid\WooCommerceBasketItemMetaData\Plugin::getMetaDataName())) {
+            return $notes;
+        }
+        return $notes." ".$order->get_item_meta($orderItemId, $metaDataName, true);
+    } 
     
 
 }
